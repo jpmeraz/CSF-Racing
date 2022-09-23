@@ -140,9 +140,9 @@ void setup()
   {
     u8g.setHiColorByRGB(255, 255, 255);
   }
-  bootUp_screen();
+  //bootUp_screen();
 
-  clear_screen();
+  //clear_screen();
 
   // luz, ventilador, sonido
   pinMode(luz_out, OUTPUT);
@@ -183,8 +183,13 @@ void loop()
   float temperaturaAmbiente = termometroIR.readAmbientTempC();
   float temperaturaObjeto = termometroIR.readObjectTempC();
 
+  u8g.firstPage();  
+  do {
+    draw();
+  } while( u8g.nextPage() );
+
   // LCD
-  mostrar_display(temperaturaObjeto);
+  //mostrar_display(temperaturaObjeto);
 
   // Mostrar información
   Serial.print("Temp. ambiente => ");
@@ -276,4 +281,11 @@ void mostrar_display(float temperaturaObjeto)
 
     delay(10);
   } while (u8g.nextPage());
+}
+
+void draw(void) {
+  // graphic commands to redraw the complete screen should be placed here  
+  u8g.setFont(u8g_font_unifont);
+  //u8g.setFont(u8g_font_osb21);
+  u8g.drawStr( 0, 22, "Hello World!");
 }
