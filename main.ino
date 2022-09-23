@@ -9,7 +9,8 @@ int s0und_out = 12;
 //
 
 U8GLIB_ST7920_128X64 u8g(13, 11, 10, U8G_PIN_NONE);
-// LOGOTIPO DE LA ESCUDERÍA
+// Bitmaps
+// Logotipo de la escudería
 const unsigned char BORREGOS_SF_TEAM_RACING[] = {
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
     0xE1, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
@@ -75,6 +76,8 @@ const unsigned char BORREGOS_SF_TEAM_RACING[] = {
     0xC0, 0x00, 0x08, 0x78, 0xF3, 0x1E, 0x30, 0x11, 0x3E, 0xE0, 0x3F, 0xC7, 0x80, 0x47, 0x89, 0xF9,
     0xE0, 0x00, 0x08, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+
+// Símbolo de grados '°'
 const unsigned char signogrados[] = {
     0x00,
     0x00,
@@ -86,14 +89,12 @@ const unsigned char signogrados[] = {
 #include <Wire.h>
 #include <Adafruit_MLX90614.h>
 
-// Instanciar objeto
+// Instanciar objeto con nombre "termometroIR"
 Adafruit_MLX90614 termometroIR = Adafruit_MLX90614();
 
 // Variable
 float temperaturaAmbiente = 0;
 float temperaturaObjeto = 0;
-
-//
 
 // velocidad
 int encoder_pin = 2;                        // Pin 2, donde se conecta el encoder
@@ -155,9 +156,9 @@ void setup()
   // tempeatura
   // Iniciar comunicación serie
   Serial.begin(9600);
+  
   // Iniciar termómetro infrarrojo con Arduino
   termometroIR.begin();
-  //
 
   // velocidad
   Serial.begin(9600);                  // Configuración del puerto serie
@@ -175,14 +176,15 @@ void setup()
 
 void loop()
 {
-  // put your main code here, to run repeatedly:
-  // LCD
-  mostrar_display();
+
 
   // temperatura
   //  Obtener temperaturas grados Celsius
   float temperaturaAmbiente = termometroIR.readAmbientTempC();
   float temperaturaObjeto = termometroIR.readObjectTempC();
+
+  // LCD
+  mostrar_display(temperaturaObjeto);
 
   // Mostrar información
   Serial.print("Temp. ambiente => ");
@@ -195,10 +197,6 @@ void loop()
 
   delay(2000);
 
-  // Si quieres mostrar la información en grados Fahrenheit utiliza las funciones
-  // readAmbientTempF() para temperatura ambiente
-  // readObjectTempF() para temperatura del objeto
-  //
 
   // velocidad
   if (millis() - timeold >= 1000)
@@ -263,7 +261,7 @@ void clear_screen()
 
 //------------------------------------------------------MOSTRAR INFORMACIÓN EN LCD 128X64 CON COMUNICACIÓN SPI---------------------------------------------------------
 
-void mostrar_display()
+void mostrar_display(float temperaturaObjeto)
 {
   u8g.firstPage();
   do
@@ -277,5 +275,5 @@ void mostrar_display()
     u8g.print(temperaturaObjeto, 1);
 
     delay(10);
-  } while (true);
+  } while (u8g.nextPage());
 }
