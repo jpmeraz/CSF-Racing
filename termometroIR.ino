@@ -24,11 +24,11 @@ void setup() {
   //Sí el código de estatus del termómetro es 200, se ejecuta el código correspondiente.
   if (termometroIR.begin() == 1){
     estatus[0] = 200;
-    error_handeling("Termometro", 200); //Imprime código de estatus
+    error_handling("Termometro", 200); //Imprime código de estatus
   }
   else{
     estatus[0] = 401;
-    error_handeling("Termometro", 401); //Imprime código de estatus
+    error_handling("Termometro", 401); //Imprime código de estatus
   }
 
   delay(5000);
@@ -54,7 +54,7 @@ void loop() {
 
 
 // Función para imprimir los códigos de estatus.
-void error_handeling(String componente,int debug){
+void error_handling(String componente,int debug){
   Serial.print(componente + ": ");
   Serial.println(debug);
 }
