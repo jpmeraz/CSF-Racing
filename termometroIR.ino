@@ -11,7 +11,7 @@
 
 /*Array para almacenar los códigos de estatus:
 [0] --> Termómetro*/
-int eestatus [5]; //Espacio para 5 códigos de estatus.
+int estatus [5]; //Espacio para 5 códigos de estatus.
 
 
 //Se asignan los valores de la función Adafruit_MLX90614() al objeto termometroIR
@@ -24,12 +24,12 @@ void setup() {
   //Sí el código de estatus del termómetro es 200, se ejecuta el código correspondiente.
   if (termometroIR.begin() == 1){
     Serial.println("Termometro IR MXL90614 iniciado correctamente");
-    error[0] = 200;
+    estatus[0] = 200;
     error_handeling(200); //Imprime código de estatus
   }
   else{
     Serial.println("Error al iniciar el termometro IR MXL90614");
-    error[0] = 401;
+    estatus[0] = 401;
     error_handeling(401); //Imprime código de estatus
   }
 
