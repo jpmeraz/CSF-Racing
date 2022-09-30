@@ -23,14 +23,12 @@ void setup() {
   
   //Sí el código de estatus del termómetro es 200, se ejecuta el código correspondiente.
   if (termometroIR.begin() == 1){
-    Serial.println("Termometro IR MXL90614 iniciado correctamente");
     estatus[0] = 200;
-    error_handeling(200); //Imprime código de estatus
+    error_handeling("Termometro", 200); //Imprime código de estatus
   }
   else{
-    Serial.println("Error al iniciar el termometro IR MXL90614");
     estatus[0] = 401;
-    error_handeling(401); //Imprime código de estatus
+    error_handeling("Termometro", 401); //Imprime código de estatus
   }
 
   delay(5000);
@@ -56,7 +54,7 @@ void loop() {
 
 
 // Función para imprimir los códigos de estatus.
-void error_handeling(int debug){
-  Serial.print("Status code: ");
+void error_handeling(String componente,int debug){
+  Serial.print(componente + ": ");
   Serial.println(debug);
 }
