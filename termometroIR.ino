@@ -37,16 +37,22 @@ void setup() {
 
 void loop() {
   if (estatus[0] == 200){
-  float temperaturaAmbiente = termometroIR.readAmbientTempC();
-  float temperaturaObjeto = termometroIR.readObjectTempC();
+    float temperaturaAmbiente = termometroIR.readAmbientTempC();
+    float temperaturaObjeto = termometroIR.readObjectTempC();
 
-  Serial.print("Temp. ambiente => ");
-  Serial.print(temperaturaAmbiente);
-  Serial.println("ºC");
+    if (!(isnan(temperaturaAmbiente))){
+      Serial.print("Temp. ambiente => ");
+      Serial.print(temperaturaAmbiente);
+      Serial.println("ºC");
 
-  Serial.print("Temp. objeto => ");
-  Serial.print(temperaturaObjeto);
-  Serial.println("ºC");
+      Serial.print("Temp. objeto => ");
+      Serial.print(temperaturaObjeto);
+      Serial.println("ºC");
+    }
+    else{
+      estatus[0] = 402; // El modificar el estatus, loop no volverá a ejecutar el código del termometro.
+      error_handling("Termometro", 402); //Imprime código de estatus
+    }
   }
 
   delay(500);
