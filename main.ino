@@ -2,6 +2,9 @@
 // Libs Pantalla
 #include "U8glib.h"
 
+#include <Wire.h>
+#include <Adafruit_MLX90614.h>
+
 // Pins luz, ventilador, sonido
 int luz_out = A3;
 int vent_out = A2;
@@ -140,7 +143,7 @@ void setup()
   {
     u8g.setHiColorByRGB(255, 255, 255);
   }
-  //bootUp_screen();
+  bootUp_screen();
 
   //clear_screen();
 
@@ -155,43 +158,35 @@ void setup()
 
   // tempeatura
   // Iniciar comunicación serie
-  Serial.begin(9600);
+
+  Serial.begin(9600); // opens serial port, sets data rate to 9600 bps
+
+  Serial.println("Adafruit MXL90614 test");
+
+  termometroIR.begin();
   
   // Iniciar termómetro infrarrojo con Arduino
-  termometroIR.begin();
+  //termometroIR.begin();
 
-  // velocidad
-  Serial.begin(9600);                  // Configuración del puerto serie
-  pinMode(encoder_pin, INPUT);         // Configuración del pin nº2
-  attachInterrupt(0, counter, RISING); // Configuración de la interrupción 0, donde esta conectado.
-  pulses = 0;
-  rpm = 0;
-  timeold = 0;
-  Serial.print("Seconds ");
-  Serial.print("RPM");
-  Serial.print("Pulses ");
-  Serial.println("Velocity[Km/h]");
 }
 //
 
 void loop()
 {
 
-
   // temperatura
   //  Obtener temperaturas grados Celsius
-  float temperaturaAmbiente = termometroIR.readAmbientTempC();
-  float temperaturaObjeto = termometroIR.readObjectTempC();
+  //float temperaturaAmbiente = termometroIR.readAmbientTempC();
+  //float temperaturaObjeto = termometroIR.readObjectTempC();
 
-  u8g.firstPage();  
-  do {
-    draw();
-  } while( u8g.nextPage() );
+  
 
   // LCD
   //mostrar_display(temperaturaObjeto);
 
-  // Mostrar información
+  float temperaturaAmbiente = termometroIR.readAmbientTempC();
+  float temperaturaObjeto = termometroIR.readObjectTempC();
+
   Serial.print("Temp. ambiente => ");
   Serial.print(temperaturaAmbiente);
   Serial.println("ºC");
@@ -200,42 +195,15 @@ void loop()
   Serial.print(temperaturaObjeto);
   Serial.println("ºC");
 
-  delay(2000);
 
+  u8g.firstPage();  
+  do {
+    mostrar_display(temperaturaObjeto);
+  } while( u8g.nextPage() );
 
-  // velocidad
-  if (millis() - timeold >= 1000)
-  {                                                                    // Se actualiza cada segundo
-    noInterrupts();                                                    // Don’t process interrupts during calculations // Desconectamos la interrupción para que no actué en esta parte del programa.
-    rpm = (60 * 1000 / pulsesperturn) / (millis() - timeold) * pulses; // Calculamos las revoluciones por minuto
-    mechanical_adv = engrane_motor / engrane_rueda;
-    rpm_wheel = mechanical_adv * rpm;
-    velocity = rpm_wheel * 3.1416 * wheel_diameter * 60 / 1000000; // Cálculo de la velocidad en [Km/h]
-    timeold = millis();                                            // Almacenamos el tiempo actual.
-    Serial.print(millis() / 1000);
-    Serial.print("       "); // Se envia al puerto serie el valor de tiempo, de las rpm y los pulsos.
-    Serial.print(rpm_wheel, DEC);
-    Serial.print("   ");
-    Serial.print(pulses, DEC);
-    Serial.print("     ");
-    Serial.println(velocity, 2);
-    pulses = 0;   // Inicializamos los pulsos.
-    interrupts(); // Restart the interrupt processing // Reiniciamos la interrupción
-  }
+  delay(100);
+
 }
-
-void counter()
-{
-
-  if (digitalRead(encoder_pin) && (micros() - debounce > 500) && digitalRead(encoder_pin))
-  {                      // Vuelve a comprobar que el encoder envia una señal buena y luego comprueba que el tiempo es superior a 1000 microsegundos y vuelve a comprobar que la señal es correcta.
-    debounce = micros(); // Almacena el tiempo para comprobar que no contamos el rebote que hay en la señal.
-    pulses++;
-  } // Suma el pulso bueno que entra.
-  else
-    ;
-}
-//
 
 // -----------------------------------------------IMPRIME LOGOTIPO DE LA ESCUDERÍA----------------------------------------------------------------------
 void bootUp_screen()
@@ -266,26 +234,14 @@ void clear_screen()
 
 //------------------------------------------------------MOSTRAR INFORMACIÓN EN LCD 128X64 CON COMUNICACIÓN SPI---------------------------------------------------------
 
-void mostrar_display(float temperaturaObjeto)
+void mostrar_display(int temperaturaObjeto)
 {
-  u8g.firstPage();
-  do
-  {
+
     u8g.setFont(u8g_font_7x14B);
     u8g.setColorIndex(1);
 
-    u8g.drawBitmap(35, 35, 1, 4, signogrados);
-    u8g.drawStr(38, 38, "C");
+    u8g.drawStr(74, 38, "TEMP:");
     u8g.setPrintPos(0, 38);
     u8g.print(temperaturaObjeto, 1);
-
-    delay(10);
-  } while (u8g.nextPage());
-}
-
-void draw(void) {
-  // graphic commands to redraw the complete screen should be placed here  
-  u8g.setFont(u8g_font_unifont);
-  //u8g.setFont(u8g_font_osb21);
-  u8g.drawStr( 0, 22, "Hello World!");
+    delay(100);
 }
