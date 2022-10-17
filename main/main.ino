@@ -15,14 +15,15 @@
 #include <Adafruit_MLX90614.h>
 
 
-/*Pins*/
+
 U8GLIB_ST7920_128X64 u8g(13, 11, 10, U8G_PIN_NONE);
 Adafruit_MLX90614 termometroIR = Adafruit_MLX90614();
 
 
 /*Array para almacenar los códigos de estatus:
-[0] --> Termómetro*/
-int estatus [1]; //Espacio para 5 códigos de estatus.
+[0] --> Termómetro
+[1] --> Pantalla LCD*/
+int estatus [1]; //Espacio para 2 códigos de estatus.
 int intento = 0; //Contador interno de void setup()
 
 
@@ -105,6 +106,7 @@ void setup()
     if (termometroIR.begin() == 1){
       estatus[0] = 200;
       error_handling("Termometro", 200); //Imprime código de estatus
+      intento = 3;
     }
     else{
       estatus[0] = 401;
@@ -126,17 +128,17 @@ void setup()
       estatus[1] = 200;
       error_handling("LCD", 200); //Imprime código de estatus
       bootUp_screen();
+      intento = 3;
+      delay(5000);
+      clear_screen();
     }
     else{
       estatus[1] = 501;
       error_handling("LCD", 501); //Imprime código de estatus
     }
     intento++;
-    delay(5000);
-    clear_screen();
   }
-delay(1000);
-
+delay(500);
 }
 
 
