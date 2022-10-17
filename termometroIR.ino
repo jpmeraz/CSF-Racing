@@ -2,7 +2,9 @@
 
 /*Códigos de error:
 200 --> Ok
-401 --> Error al iniciar termómetro*/
+401 --> Error al iniciar termómetro
+402 --> Error al leer la temperatura
+*/
 
 //Librerías
 #include <Wire.h>
@@ -12,6 +14,7 @@
 /*Array para almacenar los códigos de estatus:
 [0] --> Termómetro*/
 int estatus [5]; //Espacio para 5 códigos de estatus.
+int intento = 0; //Contador interno de void setup()
 
 
 //Se asignan los valores de la función Adafruit_MLX90614() al objeto termometroIR
@@ -22,40 +25,23 @@ void setup() {
   Serial.begin(9600); // opens serial port, sets data rate to 9600 bps
   
   //Sí el código de estatus del termómetro es 200, se ejecuta el código correspondiente.
-  if (termometroIR.begin() == 1){
-    estatus[0] = 200;
-    error_handling("Termometro", 200); //Imprime código de estatus
+  while (intento < 3) {
+    if (termometroIR.begin() == 200) {
+      estatus[0] = 200;
+      Serial.println("Termómetro iniciado correctamente.");
+      break;
+    }
+    else {
+      estatus[0] = 401;
+      Serial.println("Error al iniciar termómetro.");
+      intento++;
+    }
   }
-  else{
-    estatus[0] = 401;
-    error_handling("Termometro", 401); //Imprime código de estatus
-  }
-
-  delay(5000);
 }
 
 
 void loop() {
-  if (estatus[0] == 200){
-    float temperaturaAmbiente = termometroIR.readAmbientTempC();
-    float temperaturaObjeto = termometroIR.readObjectTempC();
-
-    if (!(isnan(temperaturaAmbiente))){
-      Serial.print("Temp. ambiente => ");
-      Serial.print(temperaturaAmbiente);
-      Serial.println("ºC");
-
-      Serial.print("Temp. objeto => ");
-      Serial.print(temperaturaObjeto);
-      Serial.println("ºC");
-    }
-    else{
-      estatus[0] = 402; // El modificar el estatus, loop no volverá a ejecutar el código del termometro.
-      error_handling("Termometro", 402); //Imprime código de estatus
-    }
-  }
-
-  delay(500);
+  
 }
 
 

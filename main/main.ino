@@ -1,17 +1,31 @@
 
-// Libs Pantalla
-#include "U8glib.h"
+/*Códigos de error:
+200 --> Ok
+401 --> Error al iniciar termómetro
+402 --> Error al leer la temperatura
+501 --> Error al iniciar la pantalla LCD
+*/
 
+/*Librerías*/
+//Pantalla
+#include <U8glib.h>
+
+//Termómetro
 #include <Wire.h>
 #include <Adafruit_MLX90614.h>
 
-// Pins luz, ventilador, sonido
-int luz_out = A3;
-int vent_out = A2;
-int s0und_out = 12;
-//
 
+/*Pins*/
 U8GLIB_ST7920_128X64 u8g(13, 11, 10, U8G_PIN_NONE);
+Adafruit_MLX90614 termometroIR = Adafruit_MLX90614();
+
+
+/*Array para almacenar los códigos de estatus:
+[0] --> Termómetro*/
+int estatus [1]; //Espacio para 5 códigos de estatus.
+int intento = 0; //Contador interno de void setup()
+
+
 // Bitmaps
 // Logotipo de la escudería
 const unsigned char BORREGOS_SF_TEAM_RACING[] = {
@@ -80,132 +94,84 @@ const unsigned char BORREGOS_SF_TEAM_RACING[] = {
     0xE0, 0x00, 0x08, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
-// Símbolo de grados '°'
-const unsigned char signogrados[] = {
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-};
-
-// Libs Temperatura
-#include <Wire.h>
-#include <Adafruit_MLX90614.h>
-
-// Instanciar objeto con nombre "termometroIR"
-Adafruit_MLX90614 termometroIR = Adafruit_MLX90614();
-
-// Variable
-float temperaturaAmbiente = 0;
-float temperaturaObjeto = 0;
-
-// velocidad
-int encoder_pin = 2;                        // Pin 2, donde se conecta el encoder
-unsigned int rpm = 0;                       // Revoluciones por minuto calculadas del motor
-unsigned int rpm_wheel = 0;                 // Revoluciones por minuto calculadas de la rueda
-float velocity = 0;                         // Velocidad en [Km/h]
-volatile byte pulses = 0;                   // Número de pulsos leidos por el Arduino en un segundo
-unsigned long timeold = 0;                  // Tiempo
-unsigned int pulsesperturn = 20;            // Número de muescas que tiene el disco del encoder.
-const int wheel_diameter = 250;             // Diámetro de la rueda [mm]
-int engrane_motor = 16;                     // Dientes del engrane que va al motor
-int engrane_rueda = 38;                     // Dientes del engrane que va a la rueda
-int mechanical_adv = 0;                     // Numero de vueltas que da la rueda comparada con el motor
-static volatile unsigned long debounce = 0; // Tiempo del rebote.
-//
 
 void setup()
 {
+  Serial.begin(9600);
 
-  // LCD
-
-  // flip screen, if required
-  u8g.setRot180();
-
-  // Initialize mlx sensor
-  //  set SPI backup if required
-  // u8g.setHardwareBackup(u8g_backup_avr_spi);
-
-  // assign default color value
-  if (u8g.getMode() == U8G_MODE_R3G3B2)
-  {
-    u8g.setColorIndex(255); // white
+  /*BOOTUP TERMOMETRO IR*/
+  //Sí el código de estatus del termómetro es 200, se ejecuta el código correspondiente.
+  while (intento < 3) {
+    if (termometroIR.begin() == 1){
+      estatus[0] = 200;
+      error_handling("Termometro", 200); //Imprime código de estatus
+    }
+    else{
+      estatus[0] = 401;
+      error_handling("Termometro", 401); //Imprime código de estatus
+    }
+    intento++;
+    delay(5000);
   }
-  else if (u8g.getMode() == U8G_MODE_GRAY2BIT)
-  {
-    u8g.setColorIndex(3); // max intensity
+
+  intento = 0; // Se reinicia el contador de intentos.
+
+  /*BOOTUP LCD*/
+  /* Se intenta iniciar el LCD 3 veces, si no se obtiene respuesta de u8g.begin(), se matiene el código de estatus 401
+  y se continúa con el programa.*/
+  while (intento < 3){
+    if (u8g.begin() != 0){
+      u8g.setRot180();
+      u8g.setColorIndex(1); // pixels on
+      estatus[1] = 200;
+      error_handling("LCD", 200); //Imprime código de estatus
+      bootUp_screen();
+    }
+    else{
+      estatus[1] = 501;
+      error_handling("LCD", 501); //Imprime código de estatus
+    }
+    intento++;
+    delay(5000);
+    clear_screen();
   }
-  else if (u8g.getMode() == U8G_MODE_BW)
-  {
-    u8g.setColorIndex(1); // pixel on
-  }
-  else if (u8g.getMode() == U8G_MODE_HICOLOR)
-  {
-    u8g.setHiColorByRGB(255, 255, 255);
-  }
-  bootUp_screen();
-
-  //clear_screen();
-
-  // luz, ventilador, sonido
-  pinMode(luz_out, OUTPUT);
-  pinMode(vent_out, OUTPUT);
-  pinMode(s0und_out, OUTPUT);
-
-  digitalWrite(luz_out, HIGH);
-  digitalWrite(vent_out, HIGH);
-  //
-
-  // tempeatura
-  // Iniciar comunicación serie
-
-  Serial.begin(9600); // opens serial port, sets data rate to 9600 bps
-
-  Serial.println("Adafruit MXL90614 test");
-
-  termometroIR.begin();
-  
-  // Iniciar termómetro infrarrojo con Arduino
-  //termometroIR.begin();
+delay(1000);
 
 }
-//
+
 
 void loop()
 {
-
-  // temperatura
-  //  Obtener temperaturas grados Celsius
-  //float temperaturaAmbiente = termometroIR.readAmbientTempC();
-  //float temperaturaObjeto = termometroIR.readObjectTempC();
-
-  
-
-  // LCD
-  //mostrar_display(temperaturaObjeto);
-
   float temperaturaAmbiente = termometroIR.readAmbientTempC();
   float temperaturaObjeto = termometroIR.readObjectTempC();
+  /*LECTURA DE TEMPERATURA*/
+  if (estatus[0] == 200){
+    if (!(isnan(temperaturaAmbiente))){
+      Serial.print("Temp. ambiente => ");
+      Serial.print(temperaturaAmbiente);
+      Serial.println("ºC");
 
-  Serial.print("Temp. ambiente => ");
-  Serial.print(temperaturaAmbiente);
-  Serial.println("ºC");
+      Serial.print("Temp. objeto => ");
+      Serial.print(temperaturaObjeto);
+      Serial.println("ºC");
+    }
+    else{
+      estatus[0] = 402; // El modificar el estatus, loop no volverá a ejecutar el código del termometro.
+      error_handling("Termometro", 402); //Imprime código de estatus
+    }
+  }
 
-  Serial.print("Temp. objeto => ");
-  Serial.print(temperaturaObjeto);
-  Serial.println("ºC");
-
-
-  u8g.firstPage();  
-  do {
-    mostrar_display(temperaturaObjeto);
-  } while( u8g.nextPage() );
-
-  delay(100);
-
+  /*IMPRIMIR EN LCD*/
+  if (estatus[1] == 200){
+    u8g.firstPage();  
+    do {
+      mostrar_display(temperaturaObjeto);
+    } while(u8g.nextPage());
+  }
 }
 
-// -----------------------------------------------IMPRIME LOGOTIPO DE LA ESCUDERÍA----------------------------------------------------------------------
+/*FUNCIONES*/
+
 void bootUp_screen()
 {
   // graphic commands to redraw the complete screen should be placed here
@@ -215,33 +181,45 @@ void bootUp_screen()
   u8g.firstPage();
   do
   {
-    u8g.drawBitmap(0, 0, 16, 64, BORREGOS_SF_TEAM_RACING);
+    u8g.drawBitmap(0, 0, 16, 64, BORREGOS_SF_TEAM_RACING); // (x, y, width*8, height)
   } while (u8g.nextPage());
 
   delay(6000);
 }
 
-//-------------------------------------------------LIMPIA LA PANTALLA------------------------------------------------------------------------
 void clear_screen()
 {
   u8g.firstPage();
   do
   {
-    u8g.setColorIndex(0);
-    u8g.drawBox(0, 0, 64, 128);
+    u8g.setColorIndex(0); // Clear pixel value
+    u8g.drawBox(0, 0, 64, 128); // Draw clear pixel in all LCD
   } while (u8g.nextPage());
 }
 
-//------------------------------------------------------MOSTRAR INFORMACIÓN EN LCD 128X64 CON COMUNICACIÓN SPI---------------------------------------------------------
-
 void mostrar_display(int temperaturaObjeto)
 {
-
     u8g.setFont(u8g_font_7x14B);
     u8g.setColorIndex(1);
+    u8g.drawStr(10, 14, "#10 - SERGIO Z.");
 
-    u8g.drawStr(74, 38, "TEMP:");
-    u8g.setPrintPos(0, 38);
-    u8g.print(temperaturaObjeto, 1);
-    delay(100);
+    u8g.setFont(u8g_font_courB12);
+    
+    u8g.setPrintPos(10, 43);
+    u8g.print(20, 1); //32 px
+
+    u8g.setPrintPos(50, 43);
+    u8g.print(temperaturaObjeto, 1); //32 px
+
+
+    u8g.setFont(u8g_font_7x14B);
+    u8g.drawStr(10, 60, "KM/H"); //32 Px de ancho
+    u8g.drawStr(66, 60, "°C"); //16 Px de ancho
+}
+
+
+// Función para imprimir los códigos de estatus.
+void error_handling(String componente, int debug){
+  Serial.print(componente + ": ");
+  Serial.println(debug);
 }
