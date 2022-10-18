@@ -1,4 +1,3 @@
-
 /*Códigos de error:
 200 --> Ok
 401 --> Error al iniciar termómetro
@@ -216,7 +215,8 @@ void mostrar_display(int temperaturaObjeto)
 
     u8g.setFont(u8g_font_7x14B);
     u8g.drawStr(10, 60, "KM/H"); //32 Px de ancho
-    u8g.drawStr(66, 60, "°C"); //16 Px de ancho
+    u8g2.drawUTF8(66, 60, DEGREE_SYMBOL);
+    u8g.drawStr(73, 60, "C"); //16 Px de ancho
 }
 
 
