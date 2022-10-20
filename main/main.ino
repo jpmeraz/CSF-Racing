@@ -197,20 +197,19 @@ void clear_screen()
 
 void mostrar_display(float temperaturaObjeto)
 {
-    u8g2.setFont(u8g2_font_helvB10_tf);
+    u8g2.setFont(u8g2_font_helvB24_tf);
     u8g2.setColorIndex(1);
     u8g2.setCursor(10, 43);
     u8g2.print(20, 1); //32 px
     u8g2.setCursor(50, 43);
     u8g2.print(temperaturaObjeto, 1); //32 px
 
-    u8g2.setFont(u8g_font_7x14B);
+    u8g2.setFont(u8g2_font_helvB14_tf);
     u8g2.drawStr(10, 14, "#10 - SERGIO Z.");
     u8g2.drawStr(10, 60, "KM/H"); //32 Px de ancho
     u8g2.drawStr(66, 60, "°C"); //16 Px de ancho
 
 }
-
 
 // Función para imprimir los códigos de estatus.
 void error_handling(String componente, int debug){
