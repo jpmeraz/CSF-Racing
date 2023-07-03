@@ -17,7 +17,7 @@
 
 
 //U8G2LIB_ST7920_128X64 u8g2(10, 11, 13, U8G_PIN_NONE);
-U8G2_ST7920_128X64_F_SW_SPI u8g2(U8G2_R2, /* clock=*/ 10, /* data=*/ 11, /* CS=*/ 13, /* reset=*/ U8X8_PIN_NONE); // Feather HUZZAH ESP8266, E=clock=14, RW=data=13, RS=CS
+U8G2_ST7920_128X64_F_SW_SPI u8g2(U8G2_R0, /* clock=*/ 36, /* data=*/ 34, /* CS=*/ 35, /* reset=*/ U8X8_PIN_NONE); // Feather HUZZAH ESP8266, E=clock=14, RW=data=13, RS=CS
 Adafruit_MLX90614 termometroIR = Adafruit_MLX90614();
 
 
@@ -73,11 +73,12 @@ void setup()
   Serial.begin(9600);
   /*BOOTUP TERMOMETRO IR*/
   //Sí el código de estatus del termómetro es 200, se ejecuta el código correspondiente.
-  while (intento < 3) {
+  intento = 0;
+  /*while (intento < 3) {
     if (termometroIR.begin() == 1){
       estatus[0] = 200;
       error_handling("Termometro", 200); //Imprime código de estatus
-      intento = 3;
+      intento = 4;
     }
     else{
       estatus[0] = 401;
@@ -86,6 +87,7 @@ void setup()
     intento++;
     delay(5000);
   }
+  */
 
   intento = 0; // Se reinicia el contador de intentos.
 
@@ -99,9 +101,10 @@ void setup()
       estatus[1] = 200;
       error_handling("LCD", 200); //Imprime código de estatus
       bootUp_screen();
-      intento = 3;
+      intento = 4;
       delay(5000);
       clear_screen();
+      Serial.println("Intento " + intento);
     }
     else{
       estatus[1] = 501;
@@ -115,10 +118,11 @@ delay(500);
 
 void loop()
 {
-  float temperaturaAmbiente = termometroIR.readAmbientTempC();
-  float temperaturaObjeto = termometroIR.readObjectTempC();
+  Serial.println("Si serví");
+  float temperaturaAmbiente = 30;//termometroIR.readAmbientTempC();
+  float temperaturaObjeto = 30; //termometroIR.readObjectTempC();
   /*LECTURA DE TEMPERATURA*/
-  if (estatus[0] == 200){
+  /*if (estatus[0] == 200){
     if (!(isnan(temperaturaAmbiente))){
       delay(5);
     }
@@ -126,7 +130,7 @@ void loop()
       estatus[0] = 402; // El modificar el estatus, loop no volverá a ejecutar el código del termometro.
       error_handling("Termometro", 402); //Imprime código de estatus
     }
-  }
+  }*/
 
   /*IMPRIMIR EN LCD*/
   if (estatus[1] == 200){
