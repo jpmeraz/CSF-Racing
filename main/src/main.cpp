@@ -108,6 +108,7 @@ static const unsigned char BORREGOS_SF_RACING_TEAM[] U8X8_PROGMEM = {
 
 void setup()
 {
+  Wire.begin();
   Serial.begin(115200);
   /*BOOTUP LCD
   Se intenta iniciar el LCD 3 veces, si no se obtiene respuesta de u8g.begin(), se da el código de estatus 401
