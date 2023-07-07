@@ -25,7 +25,7 @@ void setup() {
   Serial.begin(9600); // opens serial port, sets data rate to 9600 bps
   
   //Sí el código de estatus del termómetro es 200, se ejecuta el código correspondiente.
-  while (intento < 3) {
+  while (intento < 1500) {
     if (termometroIR.begin() == 200) {
       estatus[0] = 200;
       Serial.println("Termómetro iniciado correctamente.");

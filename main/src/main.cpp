@@ -15,9 +15,9 @@
 #include <Adafruit_MLX90614.h>
 
 //GPS
-#include <TinyGPS++.h>
-#include <SoftwareSerial.h>
+#include <TinyGPSPlus.h>
 #include <Arduino.h>
+#include <TimeLib.h> 
 
 
 /*Protitipos de funciones*/
@@ -27,6 +27,7 @@ void mostrar_display(float temperaturaObjeto, float temperaturaAmbiente);
 void error_handling(int componente, int debug);
 bool newData();
 int Velocidad();
+char* Tiempo();
 bool Switches(int Switch, int Relay);
 
 
@@ -34,8 +35,8 @@ bool Switches(int Switch, int Relay);
 #define lcdE 36
 #define lcdRW 34
 #define lcdRS 35
-#define gpsTX 18
-#define gpsRX 19
+#define gpsTX 15
+#define gpsRX 14
 #define Switch1 31
 #define Switch2 32
 #define Switch3 33
@@ -49,14 +50,13 @@ int velocidad = 0;
 bool isSwitch1 = false;
 bool isSwitch2 = false;
 bool isSwitch3 = false;
-
+char Time[]  = "HORA: 00:00:00";
+char NoTime[] = "HORA: --:--:--";
 
 /*Objetos*/
 U8G2_ST7920_128X64_F_SW_SPI u8g2(U8G2_R0, /* clock=*/ lcdE, /* data=*/ lcdRW, /* CS=*/ lcdRS, /* reset=*/ U8X8_PIN_NONE); //E=clock=14, RW=data=13, RS=CS
 Adafruit_MLX90614 termometroIR = Adafruit_MLX90614();
-SoftwareSerial mygps(gpsRX, gpsTX);
 TinyGPSPlus gps;
-
 
 /*Array para almacenar los códigos de estatus:
 [0] --> Termómetro
@@ -110,6 +110,7 @@ void setup()
 {
   Wire.begin();
   Serial.begin(115200);
+  
   /*BOOTUP LCD
   Se intenta iniciar el LCD 3 veces, si no se obtiene respuesta de u8g.begin(), se da el código de estatus 401
   y se continúa con el programa.*/
@@ -146,7 +147,7 @@ void setup()
   intento = 0; // Se reinicia el contador de intentos.
 
   /*BOOTUP GPS*/
-  mygps.begin(9600);
+  Serial3.begin(9600);
 
   /*BOOTUP SWITCHES*/
   pinMode(Switch1, INPUT);
@@ -191,7 +192,7 @@ void loop()
   if (estatus[1] == 200){
       u8g2.firstPage();  
     do {
-      mostrar_display(temperaturaObjeto, temperaturaAmbiente);
+      mostrar_display(temperaturaObjeto, velocidad);
     } while(u8g2.nextPage());
   }
 
@@ -209,7 +210,7 @@ void bootUp_screen()
   {
     u8g2.drawXBMP(0, 0, BORREGOS_SF_RACING_TEAM_W, BORREGOS_SF_RACING_TEAM_H, BORREGOS_SF_RACING_TEAM); // (x, y, width*8, height)
     u8g2.setFont(u8g2_font_helvB10_tf);
-    u8g2.drawStr(46, 31, "MARTIN");
+    u8g2.drawStr(46, 31, "MARI");
     u8g2.setFont(u8g2_font_6x13_tf);
     u8g2.drawStr(46, 45, "By SF RACING");
   } while (u8g2.nextPage());
@@ -226,22 +227,20 @@ void clear_screen()
   } while (u8g2.nextPage());
 }
 
-void mostrar_display(float temperaturaObjeto, float temperaturaAmbiente)
+void mostrar_display(float temperaturaObjeto, float velocidad)
 {
     u8g2.setFont(u8g2_font_helvB18_tf);
     u8g2.setColorIndex(1);
     u8g2.setCursor(7, 43);
-    u8g2.print(temperaturaAmbiente, 1); //32 px
+    u8g2.print(velocidad, 1); //32 px
     u8g2.setCursor(71, 43);
     u8g2.print(temperaturaObjeto, 1); //32 px
 
     
     u8g2.setFont(u8g2_font_6x13_tf);
-    u8g2.drawStr(20, 14, "#10 - SERGIO Z.");
+    u8g2.drawStr(20, 14, /*"#10 - SERGIO Z."*/Tiempo());
 
-    u8g2.drawStr(8, 60, "AMBNT");
-    u8g2.drawUTF8(38, 60, "°");
-    u8g2.drawStr(46, 60, "C"); //16 Px de ancho -- 8 pixeles mas que el simbolo °
+    u8g2.drawStr(13, 60, "KM/H");
 
     //u8g2.drawStr(10, 60, "KM/H"); //32 Px de ancho
     u8g2.drawStr(72, 60, "MOTOR");
@@ -258,11 +257,11 @@ void error_handling(int componente, int debug){
 }
 
 bool newData(){
-  for (unsigned long start = millis(); millis() - start < 200;)
+  for (unsigned long start = millis(); millis() - start < 1000;)
   {
-    while (mygps.available())
+    while (Serial3.available())
     {
-      if (gps.encode(mygps.read()))
+      if (gps.encode(Serial3.read()))
         return true;
     }
   }
@@ -278,6 +277,30 @@ int Velocidad()
   else
   {
     return 0;
+  }
+}
+
+char* Tiempo()
+{
+  if (gps.time.isValid() == 1)
+  {
+    // set current UTC time
+    setTime(gps.time.hour(), gps.time.minute(), gps.time.second(), gps.date.day(), gps.date.month(), gps.date.year());
+    // add the offset to get local time
+    //adjustTime(-21600);
+
+    Time[12] = second() / 10 + '0';
+    Time[13] = second() % 10 + '0';
+    Time[9]  = minute() / 10 + '0';
+    Time[10] = minute() % 10 + '0';
+    Time[6]  = (hour()-6)   / 10 + '0';
+    Time[7]  = (hour()-6)  % 10 + '0';
+    Serial.println(Time);
+    return Time;
+  }
+  else
+  {
+    return NoTime;
   }
 }
 
