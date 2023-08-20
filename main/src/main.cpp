@@ -132,7 +132,8 @@ void setup()
   /*BOOTUP TERMOMETRO IR
   Se intenta iniciar el termómetro 3 veces, si no se obtiene respuesta de termometroIR.begin(), se da el 
   código de estatus 401*/
-  while (intento < 3) {
+  /*while (intento < 3) {
+    Serial.println("Sigo1");
     if (termometroIR.begin() == 1){
       error_handling(0, 200); // Se almacena e imprime el código de estatus.
       intento = 4;
@@ -143,8 +144,11 @@ void setup()
     }
     intento++;
     delay(5000);
-  }
+  }*/
   intento = 0; // Se reinicia el contador de intentos.
+  
+  Serial.println("Sigo");
+  
 
   /*BOOTUP GPS*/
   Serial3.begin(9600);
